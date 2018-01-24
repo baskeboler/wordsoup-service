@@ -9,26 +9,24 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
+// Endpoints facade struct with all endpoints
 type Endpoints struct {
 	GeneratePuzzleEndpoint endpoint.Endpoint
 }
 
+// MakeServerEndpoint builds facade struct
 func MakeServerEndpoint(s Service) Endpoints {
 	return Endpoints{
 		GeneratePuzzleEndpoint: MakeGeneratePuzzleEndpoint(s),
 	}
 }
 
+// MakeGeneratePuzzleEndpoint builds the GeneratePuzzle endpoint
 func MakeGeneratePuzzleEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		// var ws interface{}
 		req := request.(generatePuzzleRequest)
-		// if !ok {
-		// 	return nil, ErrBadRouting
-		// }
 
 		ws, e := s.GeneratePuzzle(ctx, req.Width, req.Height, req.NumberOfWords)
-		// ws2, ok := ws.(*wordsoup.WordSoup)
 		if e != nil {
 			return nil, ErrBadRouting
 		}

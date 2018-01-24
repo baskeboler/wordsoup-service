@@ -35,13 +35,11 @@ func main() {
 	}
 
 	var s service.Service
-	// {
 	s, err := service.NewService()
 	if err != nil {
 		panic(err)
 	}
 	s = service.LoggingMiddleware(logger)(s)
-	// }
 	var h http.Handler
 	{
 		h = service.MakeHTTPRouter(s, log.With(logger, "component", "http"))

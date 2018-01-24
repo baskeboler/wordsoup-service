@@ -13,9 +13,14 @@ import (
 )
 
 var (
+	// ErrBadRouting routing error
 	ErrBadRouting = errors.New("Bad Routing")
+
+	// ErrMalformedRequest bad request
+	ErrMalformedRequest = errors.New("Request is malformed")
 )
 
+// MakeHTTPRouter builds the service http.Handler
 func MakeHTTPRouter(s Service, logger log.Logger) http.Handler {
 	r := mux.NewRouter()
 	e := MakeServerEndpoint(s)
@@ -70,9 +75,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 func codeFrom(err error) int {
 	switch err {
-	// case ErrNotFound:
-	// 	return http.StatusNotFound
-	case ErrBadRouting:
+	case ErrBadRouting, ErrMalformedRequest:
 		return http.StatusBadRequest
 	default:
 		return http.StatusInternalServerError
@@ -80,28 +83,30 @@ func codeFrom(err error) int {
 
 }
 func decodeGeneratePuzzleRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-
 	vars := mux.Vars(r)
 	wStr, ok := vars["width"]
 	if !ok {
-		return nil, ErrBadRouting
+		return nil, ErrMalformedRequest
 	}
 	w, e := strconv.Atoi(wStr)
 	if e != nil {
-		return nil, ErrBadRouting
+		return nil, ErrMalformedRequest
 	}
 	hStr, ok := vars["height"]
 	if !ok {
-		return nil, ErrBadRouting
+		return nil, ErrMalformedRequest
 	}
 	h, err := strconv.Atoi(hStr)
 	if err != nil {
-		return nil, ErrBadRouting
+		return nil, ErrMalformedRequest
 	}
 	wordsStr, ok := vars["words"]
 	if !ok {
-		return nil, ErrBadRouting
+		return nil, ErrMalformedRequest
 	}
 	words, err := strconv.Atoi(wordsStr)
+	if err != nil {
+		return nil, ErrMalformedRequest
+	}
 	return generatePuzzleRequest{Height: h, Width: w, NumberOfWords: words}, nil
 }

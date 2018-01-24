@@ -8,8 +8,7 @@ import (
 	"github.com/baskeboler/wordsoup"
 )
 
-// type Dictionary wordsoup.Dictionary
-// type WordSoup wordsoup.WordSoup
+// Service interface
 type Service interface {
 	//GetDictionary(c context.Context) (wordsoup.Dictionary, error)
 	GeneratePuzzle(c context.Context, width, height, words int) (*wordsoup.WordSoup, error)
@@ -19,6 +18,7 @@ type serviceImpl struct {
 	dict wordsoup.Dictionary
 }
 
+// NewService builds the service
 func NewService() (Service, error) {
 	dictPath := os.Getenv("WORDSOUP_DICT")
 	fmt.Printf("Loading dictionary from %s\n", dictPath)
@@ -30,7 +30,6 @@ func NewService() (Service, error) {
 }
 
 func (s *serviceImpl) GeneratePuzzle(c context.Context, width, height, words int) (*wordsoup.WordSoup, error) {
-	// var ws interface{}
 	ws, e := wordsoup.GenerateRandomWordSoup(height, width, words, s.dict)
 	if e != nil {
 		return nil, e

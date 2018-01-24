@@ -8,8 +8,10 @@ import (
 	"github.com/go-kit/kit/log"
 )
 
+// Middleware definition
 type Middleware func(Service) Service
 
+// LoggingMiddleware returns a middleware that logs each service call
 func LoggingMiddleware(logger log.Logger) Middleware {
 	return func(next Service) Service {
 		return &loggingMiddleware{
