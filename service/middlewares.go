@@ -28,5 +28,6 @@ func (m *loggingMiddleware) GeneratePuzzle(c context.Context, width, height, wor
 	defer func(begin time.Time) {
 		m.logger.Log("method", "GeneratePuzzle", "took", time.Since(begin), "err", err)
 	}(time.Now())
-	return m.next.GeneratePuzzle(c, width, height, words)
+	ws, err = m.next.GeneratePuzzle(c, width, height, words)
+	return
 }

@@ -8,10 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	// service "./service"
-
 	"github.com/baskeboler/wordsoup-service/service"
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/term"
 )
 
 func main() {
@@ -23,7 +22,14 @@ func main() {
 
 	var logger log.Logger
 	{
-		logger = log.NewLogfmtLogger(os.Stderr)
+		logger = term.NewColorLogger(os.Stderr, log.NewLogfmtLogger, func(keyvals ...interface{}) term.FgBgColor {
+			for i := 0; i < len(keyvals)-1; i = i + 2 {
+				if keyvals[i] == "err" && keyvals[i+1] != nil {
+					return term.FgBgColor{Fg: term.Red}
+				}
+			}
+			return term.FgBgColor{}
+		})
 		logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 		logger = log.With(logger, "caller", log.DefaultCaller)
 	}
