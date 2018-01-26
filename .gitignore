@@ -1,3 +1,4 @@
 debug
 wordsoup-service
 .vscode/launch.json
+service/debug.test
