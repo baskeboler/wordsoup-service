@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"os"
 
 	"github.com/baskeboler/wordsoup"
 )
@@ -20,9 +18,7 @@ type serviceImpl struct {
 
 // NewService builds the service
 func NewService() (Service, error) {
-	dictPath := os.Getenv("WORDSOUP_DICT")
-	fmt.Printf("Loading dictionary from %s\n", dictPath)
-	d, e := wordsoup.NewDictionaryFromTextFile(dictPath)
+	d, e := wordsoup.NewDictionary()
 	if e != nil {
 		return nil, e
 	}
