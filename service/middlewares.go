@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/baskeboler/auth"
 	"github.com/baskeboler/wordsoup"
 	"github.com/go-kit/kit/log"
 )
@@ -32,4 +33,16 @@ func (m *loggingMiddleware) GeneratePuzzle(c context.Context, width, height, wor
 	}(time.Now())
 	ws, err = m.next.GeneratePuzzle(c, width, height, words)
 	return
+}
+func (m *loggingMiddleware) Login(c context.Context, name string, password string) (k *auth.LoginKey, err error) {
+	defer func(begin time.Time) {
+		m.logger.Log("method", "Login", "name", name, "password", password, "took", time.Since(begin), "err", err)
+	}(time.Now())
+	k, err = m.next.Login(c, name, password)
+	return
+}
+
+type authMiddleware struct {
+	next Service
+	auth auth.Manager
 }

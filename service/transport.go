@@ -18,6 +18,7 @@ var (
 
 	// ErrMalformedRequest bad request
 	ErrMalformedRequest = errors.New("Request is malformed")
+	ErrAuthFailed       = errors.New("Auth Failed")
 )
 
 // MakeHTTPRouter builds the service http.Handler
@@ -28,6 +29,7 @@ func MakeHTTPRouter(s Service, logger log.Logger) http.Handler {
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorLogger(logger),
 		httptransport.ServerErrorEncoder(encodeError),
+		httptransport.ServerBefore(AuthEndpoint()),
 	}
 
 	r.Methods("GET").Path("/api/puzzle").
@@ -39,11 +41,25 @@ func MakeHTTPRouter(s Service, logger log.Logger) http.Handler {
 		Handler(
 			httptransport.NewServer(
 				e.GeneratePuzzleEndpoint,
-				decodeGeneratePuzzleRequest,
+				authValidator(decodeGeneratePuzzleRequest),
 				encodeResponse,
 				options...,
 			),
 		)
+	r.Methods("POST").Path("/api/login").
+		// Queries(
+		// 	"name", "{name:[0-9a-zA-Z]+}",
+		// 	"password", "{password:[0-9a-zA-Z]+}",
+		// ).
+		Handler(
+			httptransport.NewServer(
+				e.LoginEndpoint,
+				decodeLoginRequest,
+				encodeResponse,
+				options[:2]...,
+			),
+		)
+
 	return r
 
 }
@@ -77,10 +93,33 @@ func codeFrom(err error) int {
 	switch err {
 	case ErrBadRouting, ErrMalformedRequest:
 		return http.StatusBadRequest
+	case ErrAuthFailed:
+		return http.StatusUnauthorized
 	default:
 		return http.StatusInternalServerError
 	}
 
+}
+
+func authValidator(f httptransport.DecodeRequestFunc) httptransport.DecodeRequestFunc {
+	return func(ctx context.Context, r *http.Request) (interface{}, error) {
+		failed := ctx.Value("AuthFailed")
+		notok, err := failed.(bool)
+		if !err || notok {
+			return nil, ErrAuthFailed
+		}
+		return f(ctx, r)
+	}
+}
+func decodeLoginRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
+	var authInfo struct {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}
+	json.NewDecoder(r.Body).Decode(&authInfo)
+	name := authInfo.Name
+	password := authInfo.Password
+	return loginRequest{Name: name, Password: password}, nil
 }
 func decodeGeneratePuzzleRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
 	vars := mux.Vars(r)
